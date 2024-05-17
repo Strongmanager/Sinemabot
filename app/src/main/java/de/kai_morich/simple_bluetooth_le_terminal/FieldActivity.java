@@ -48,27 +48,9 @@ public class FieldActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().add(R.id.fragment, field_fragment, "devices").commit();
         resetKey();
         resetMotion();
-//        if (savedInstanceState == null) {
-//            field_fragment.setArguments(bundle);
-//            getSupportFragmentManager().beginTransaction().add(R.id.fragment, field_fragment, "devices").commit();
-//        }else{
-//            onBackStackChanged();
-//        }
 
     }
 
-
-
-//    @Override
-//    public void onBackStackChanged() {
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount()>0);
-//    }
-
-//    @Override
-//    public boolean onSupportNavigateUp() {
-//        onBackPressed();
-//        return true;
-//    }
     public void resetKey(){
         keys[0]=0b0;
         keys[1]=0b0;
@@ -336,49 +318,6 @@ public class FieldActivity extends AppCompatActivity {
         }
 
 
-//                msg = "R " + (String.valueOf(x) + " and " +String.valueOf(y));
-//            motion = motion | 0b0100 | (int)x<<4 | (int)y << 24; // id axis = 1
-
-
-//        if((xr == 0 && yr == 0)) {
-//            // Do Nothing or handle DPAD input
-//            field_fragment.sendData(Rmotions);
-//        }else{
-//            field_fragment.sendData(Rmotions);
-//        }
-//
-
-//        else{
-//
-////            msg = String.valueOf(xx) + String.valueOf(yy);
-//            SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
-//            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//            receiveText.append(spn);
-//            if((xr != 0) || (yr != 0) || (xl != 0) || (yl != 0)) {
-//                if((xr != 0) || (yr != 0)){
-//                    int xx = Math.round(xr) & 0x3FFFF; // konvert dan potong menjadi 18 bit
-//                    int yy = Math.round(yr) & 0x3FFFF; // konvert dan potong menjadi 18 bit
-//                    Rmotions = motionToByte(xx,yy, Rmotions[0]);
-//                    field_fragment.sendData(Rmotions);
-//                }
-//                if((xl != 0) || (yl != 0)){
-//                    int xx = Math.round(xl) & 0x3FFFF; // konvert dan potong menjadi 18 bit
-//                    int yy = Math.round(yl) & 0x3FFFF; // konvert dan potong menjadi 18 bit
-//                    Lmotions = motionToByte(xx,yy, Lmotions[0]);
-//                    field_fragment.sendData(Lmotions);
-//                }
-//
-//            }else{
-//                field_fragment.sendData(Rmotions);
-//                field_fragment.sendData(Lmotions);
-//            }
-//        }
-
-        // Calculate the vertical distance to move by
-        // using the input value from one of these physical controls:
-        // the left control stick, hat switch, or the right control stick.
-
-        // Update the ship object based on the new x and y values
         resetMotion();
     }
 
