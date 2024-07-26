@@ -10,20 +10,13 @@
     android:orientation="horizontal"
     android:padding="0dp">
 
-
-    <!--<SurfaceView
-        android:id="@+id/surfaceView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintStart_toStartOf="parent" />-->
-
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitXY"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="54dp" />
+        tools:layout_editor_absoluteX="-2dp" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -37,6 +30,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/receiveText"
         android:layout_width="wrap_content"
@@ -51,6 +45,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
+
+
+
+
     <!-- record gerakan -->
     <!--<ListView
         android:id="@+id/joystick_movements_list"
@@ -59,88 +57,93 @@
         android:layout_weight="1"
         android:visibility="gone" />-->
 
-    <Button
+    <ImageButton
         android:id="@+id/saved_movements_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Record"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="Buttonsavedmovements"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="20dp"
+        android:background="#00070707"
+        android:contentDescription="@string/record_motion"
+        android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/joystickView_right"
+        app:layout_constraintStart_toStartOf="@+id/joystickView_left"
+        app:srcCompat="@drawable/rec" />
 
-    <Button
+    <ImageView
+        android:id="@+id/recording_dot"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/socketConnection"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/recordblink" />
+
+
+    <ImageButton
         android:id="@+id/stop_saved_movements_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="20dp"
+        android:background="#00070707"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/joystickView_right"
+        app:layout_constraintStart_toStartOf="@+id/joystickView_left"
+        app:srcCompat="@drawable/stop2"
+        android:visibility="gone"
         android:layout_above="@+id/saved_movements_button"
-        android:visibility="gone"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="Buttonstopsavedmovements"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:contentDescription="@string/stop_motion"/>
 
-    <Button
+    <ImageButton
         android:id="@+id/play_saved_movements_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Play"
-        android:layout_above="@+id/stop_saved_movements_button"
-        android:visibility="gone"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="Buttonplaysavedmovements"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginBottom="23dp"
+        android:background="#00070707"
+        android:contentDescription="@string/play_motion"
+        android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/socketConnection"
+        app:srcCompat="@drawable/play2" />
 
-    <!-- record video -->
-    <!--<SurfaceView
-        android:id="@+id/surfaceView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintStart_toStartOf="parent" />-->
-
-    <!--<Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="buttonStartVideoRecording"
-        android:text="Record"
+    <ImageButton
+        android:id="@+id/reset_button"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginBottom="23dp"
+        android:background="#00070707"
+        android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/button"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"
-        android:onClick="buttonStopVideoRecording"
-        android:text="Pause"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />-->
-
+        app:layout_constraintStart_toStartOf="@+id/socketConnection"
+        app:srcCompat="@drawable/reset" />
 
     <Button
         android:id="@+id/socketConnection"
         android:layout_width="230dp"
         android:layout_height="35dp"
         android:background="@drawable/connect_button"
-        android:textColor="#FFFFFF"
+        android:contentDescription="@string/bluetooth_connection"
+        android:textColor="#201F1F"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/imageButton2"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="10dp"
+        android:background="#00070707"
+        android:scaleType="fitXY"
+        app:srcCompat="@drawable/logout2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/socketConnection"/>
 
     <EditText
         android:id="@+id/ipEditText"
@@ -154,26 +157,13 @@
 
     <Button
         android:id="@+id/buttonD3"
-        android:layout_width="100dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginTop="5dp"
-        android:background="@drawable/rec_botton_3"
-        android:text="kirim"
-        android:textColor="#FFFFFF"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/ic_send_white_24dp"
         android:textSize="18dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/socketConnection" />
-
-    <!-- <TextView
-        android:id="@+id/ViewRightSpeed"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:textColor="#FFFFFF"
-        android:textSize="20dp"
-        app:layout_constraintEnd_toEndOf="@id/buttonD2"
-        app:layout_constraintStart_toStartOf="@id/buttonD2"
-        app:layout_constraintTop_toBottomOf="@id/buttonD2" /> -->
 
 
     <io.github.controlwear.virtual.joystick.android.JoystickView
@@ -181,15 +171,15 @@
         android:layout_width="170dp"
         android:layout_height="170dp"
         android:layout_marginStart="20dp"
-        android:layout_marginBottom="0dp"
-        app:JV_backgroundColor="#C1505050"
-        app:JV_borderColor="#474747"
+        android:layout_marginBottom="-5dp"
+        app:JV_backgroundColor="#BE131313"
+        app:JV_borderColor="#c9f440"
         app:JV_borderWidth="7dp"
-        app:JV_buttonColor="@color/mainColor"
+        app:JV_buttonColor="#c9f440"
         app:JV_buttonSizeRatio="25%"
         app:JV_fixedCenter="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <io.github.controlwear.virtual.joystick.android.JoystickView
         android:id="@+id/joystickView_right"
@@ -197,28 +187,29 @@
         android:layout_height="170dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="-5dp"
-        app:JV_backgroundColor="#C1505050"
-        app:JV_borderColor="#474747"
+        app:JV_backgroundColor="#BE131313"
+        app:JV_borderColor="#c9f440"
         app:JV_borderWidth="7dp"
-        app:JV_buttonColor="@color/mainColor"
+        app:JV_buttonColor="#c9f440"
         app:JV_buttonSizeRatio="25%"
         app:JV_fixedCenter="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="20dp" />
+        app:layout_constraintGuide_end="780dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="45dp" />
+        app:layout_constraintGuide_end="755dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline4"

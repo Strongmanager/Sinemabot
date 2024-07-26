@@ -16,7 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/mainColor" />
+            android:background="@color/kuning" />
         <RelativeLayout
             android:id="@+id/fragment"
             android:layout_width="match_parent"

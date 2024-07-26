@@ -1,20 +1,29 @@
 package de.kai_morich.simple_bluetooth_le_terminal;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
@@ -32,9 +41,20 @@ import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+/** import uji latensi**/
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+/**---------------------------------**/
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.fragment.app.Fragment;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -42,12 +62,14 @@ import android.view.animation.AnimationUtils;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.github.controlwear.virtual.joystick.android.JoystickView;
 
 public class FieldFragment extends Fragment implements ServiceConnection, SerialListener {
     private static final int VIBRATION_DURATION = 170;
-    private static final int STRENGTH_THRESHOLD = 30;
+    private static final int STRENGTH_THRESHOLD = 5;
     private static final int VIBRATION_STRENGTH_THRESHOLD = 10;
     private static final int DELAY = 50;
     private static final int MULTIPLIER = 1000;
@@ -55,21 +77,22 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
     private Button savedMovementsButton;
     private Button stopSavedMovementsButton;
     private Button playSavedMovementsButton;
+    private Button resetMovementsButton;
     private boolean isRecording = false;
+
+    private View recordingDot;
+    private TextView timerTextView;
+    private Animation blinkAnimation;
+    private Timer timer;
+    private int seconds = 0;
 
     private boolean isPaused = false;
 
     //private List<JoystickMovement> joystickMovements = new ArrayList<>();
 
     private Vibrator vibrator;
-    private static final String READ_EXTERNAL_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
-    private WebView webView;
-    private SurfaceView surfaceView;
-    private Button recordButton, pauseButton, stopButton;
-    private MediaProjectionManager mediaProjectionManager;
-    private MediaProjection mediaProjection;
-    private VirtualDisplay virtualDisplay;
-    private MediaRecorder mediaRecorder;
+
+    private Handler handler = new Handler(Looper.getMainLooper()); // kode untuk pengujian latensi
 
     private String deviceAddress;
     private enum Connected { False, Pending, True }
@@ -185,6 +208,8 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
     /*
      * UI
      */
+    
+    
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -192,38 +217,10 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
         receiveText = view.findViewById(R.id.receiveText);                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
-        /**ActivityCompat.requestPermissions(getActivity(),
-         new String[]{CAMERA,
-         READ_EXTERNAL_STORAGE,
-         RECORD_AUDIO},
-         PackageManager.PERMISSION_GRANTED);
-         SurfaceView surfaceView = view.findViewById(R.id.surfaceView);
-         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-         mediaRecorder = new MediaRecorder();
-         }**/
+
         WebView webView = view.findViewById(R.id.webView);
         Button connectButton = view.findViewById(R.id.buttonD3);
         final EditText ipEditText = view.findViewById(R.id.ipEditText);
-        //String ipAddress = ipEditText.getText().toString();
-        //String url = "http://" + ipAddress + ":5000";
-        /**Button startButton = view.findViewById(R.id.button);
-         Button stopButton = view.findViewById(R.id.button2);
-         startButton.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-        buttonStartVideoRecording(v);
-        Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
-        v.startAnimation(animation);
-        vibrator.vibrate(170);
-        }
-        });
-         stopButton.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-        buttonStopVideoRecording(v);
-        Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
-        v.startAnimation(animation);
-        vibrator.vibrate(170);
-        }
-        });**/
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -234,16 +231,12 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (connected == Connected.True) {
-                    disconnect();
-                } else if (connected == Connected.False) {
-                    connect();
-                }
                 Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
                 v.startAnimation(animation);
                 vibrator.vibrate(170);
                 String ipAddress = ipEditText.getText().toString();
                 String url = "http://" + ipAddress + ":5000";
+               handler.postDelayed(runnable, 1000); //uji delay
                 webView.setWebViewClient(new WebViewClient() {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -253,72 +246,69 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
                 });
                 webView.loadUrl(url);
             }
+            /** UJI LATENSI**/
+            private Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    webView.post(() -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            webView.evaluateJavascript("(function() { var canvas = document.createElement('canvas'); var img = document.querySelector('img'); canvas.width = img.width; canvas.height = img.height; canvas.getContext('2d').drawImage(img, 0, 0); return canvas.toDataURL('image/png').substring(22); })();", value -> {
+                                Bitmap bitmap = convertBase64ToBitmap(value);
+                                if (bitmap != null) {
+                                    recognizeTextFromBitmap(bitmap);
+                                }
+                            });
+                        }
+                    });
+                    handler.postDelayed(this, 1000);
+                }
+            };
+
+            private Bitmap convertBase64ToBitmap(String base64Str) {
+                try {
+                    byte[] decodedString = Base64.decode(base64Str, Base64.DEFAULT);
+                    return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                } catch (Exception e) {
+                    Log.e("FieldFragment", "Error converting base64 to bitmap", e);
+                    return null;
+                }
+            }
+
+            private void recognizeTextFromBitmap(Bitmap bitmap) {
+                InputImage image = InputImage.fromBitmap(bitmap, 0);
+                TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+                recognizer.process(image)
+                        .addOnSuccessListener(result -> {
+                            for (Text.TextBlock block : result.getTextBlocks()) {
+                                for (Text.Line line : block.getLines()) {
+                                    String timestamp = line.getText();
+                                    Log.d("FieldFragment", "Recognized timestamp: " + timestamp);  // Log timestamp
+                                    long currentTime = System.currentTimeMillis();
+                                    calculateLatency(timestamp, currentTime);
+                                }
+                            }
+                        })
+                        .addOnFailureListener(e -> Log.e("FieldFragment", "Error recognizing text", e));
+            }
+
+            private void calculateLatency(String timestamp, long currentTime) {
+                try {
+                    Log.d("FieldFragment", "Full recognized text: " + timestamp);
+                    if (timestamp.length() == 23) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
+                        Date videoTime = sdf.parse(timestamp);
+                        if (videoTime != null) {
+                            long latency = currentTime - videoTime.getTime();
+                            Log.d("FieldFragment", "Timestamp: " + timestamp + ", Latency: " + latency + " ms");
+                        }
+                    } else {
+                        Log.e("FieldFragment", "Invalid timestamp length: " + timestamp.length());
+                    }
+                } catch (Exception e) {
+                    Log.e("FieldFragment", "Error calculating latency", e);
+                }
+            }
         });
-        /**FrameLayout frameLayout = new FrameLayout(getActivity());
-         frameLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-         frameLayout.addView(webView);
-
-         ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-         surfaceView.setLayoutParams(layoutParams);
-         surfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-         surfaceView.setZOrderOnTop(true);
-         surfaceView.setVisibility(View.GONE);
-
-         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-         webView.setBackgroundColor(0);
-         webView.setVisibility(View.VISIBLE);
-
-         webView.loadUrl(url);
-
-         // Initialize mediaRecorder inside onCreateView()
-         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-         mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-         mediaRecorder.setOutputFile("/sdcard/test.mp4");
-         mediaRecorder.setMaxDuration(5000); // 5 seconds of max recording
-         mediaRecorder.setMaxFileSize(5000000); // Max 5 MB **/
-
-
-        /**if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-         mediaProjectionManager = (MediaProjectionManager) getActivity().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-         }
-
-         recordButton.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-        try {
-        startRecording();
-        } catch (IOException e) {
-        throw new RuntimeException(e);
-        }
-        }
-        });
-
-         pauseButton.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-        pauseRecording();
-        }
-        });
-
-         stopButton.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-        stopRecording();
-        }
-        });
-
-         //        code tanam untuk menampilkan hasil kamera
-         //        WebView webView = view.findViewById(R.id.webView);
-         //        String url = "http://10.106.60.120:5000";
-         //        webView.getSettings().setJavaScriptEnabled(true);
-         //        webView.setWebViewClient(new WebViewClient() {
-         //            @Override
-         //            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-         //                view.loadUrl(url);
-         //                return true;
-         //            }
-         //        });
-         //        webView.loadUrl(url);**/
 
 // Dapatkan referensi ke ProgressBar
         ProgressBar progressBar = view.findViewById(R.id.progressBar);
@@ -338,12 +328,34 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
         });
         resetCom();
 
+        AppCompatImageButton exitButton = view.findViewById(R.id.imageButton2);
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Activity activity = requireActivity();
+                new AlertDialog.Builder(activity)
+                        .setMessage("Are you sure want to exit?")
+                        .setCancelable(false)
+                        .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                activity.finish();
+                            }
+                        })
+                        .setNegativeButton("No",null)
+                        .show();
+            }
+        });
+
 
 //        Toast.makeText(getActivity(),deviceAddress, Toast.LENGTH_SHORT).show();
         vibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
-        savedMovementsButton = view.findViewById(R.id.saved_movements_button);
-        stopSavedMovementsButton = view.findViewById(R.id.stop_saved_movements_button);
-        playSavedMovementsButton = view.findViewById(R.id.play_saved_movements_button);
+        AppCompatImageButton savedMovementsButton = view.findViewById(R.id.saved_movements_button);
+        AppCompatImageButton stopSavedMovementsButton = view.findViewById(R.id.stop_saved_movements_button);
+        AppCompatImageButton playSavedMovementsButton = view.findViewById(R.id.play_saved_movements_button);
+        AppCompatImageButton resetButton = view.findViewById(R.id.reset_button);
+        recordingDot = view.findViewById(R.id.recording_dot);
+        blinkAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.blink_animation);
 
         JoystickView leftJoystick = (JoystickView) view.findViewById(R.id.joystickView_left);
         leftJoystick.setOnClickListener(new View.OnClickListener() {
@@ -384,8 +396,10 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
             public void onClick(View view) {
                 if (!isRecording) {
                     isRecording = true;
-                    savedMovementsButton.setText("Stop");
+                    savedMovementsButton.setVisibility(View.GONE);
                     stopSavedMovementsButton.setVisibility(View.VISIBLE);
+                    recordingDot.setVisibility(View.VISIBLE);
+                    recordingDot.startAnimation(blinkAnimation);
                     communication[0] = (byte)(communication[0] | 0b00001000);
                     sendData(communication);
                     Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
@@ -394,7 +408,7 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
                     resetCom();
                 } else {
                     isRecording = false;
-                    savedMovementsButton.setText("Record");
+ //                   playSavedMovementsButton.setVisibility(View.VISIBLE);
                     stopSavedMovementsButton.setVisibility(View.GONE);
                     communication[0] = (byte)(communication[0] | 0b00010000);
                     sendData(communication);
@@ -411,8 +425,10 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
             public void onClick(View view) {
                 isRecording = false;
                 stopSavedMovementsButton.setVisibility(View.GONE);
-                playSavedMovementsButton.setVisibility(View.VISIBLE);
-                communication[0] = (byte)(communication[0] | 0b00010000);
+                savedMovementsButton.setVisibility(View.VISIBLE);
+                recordingDot.clearAnimation();
+                recordingDot.setVisibility(View.GONE);
+                communication[0] = (byte)(communication[0] | 0b00100000);
                 sendData(communication);
                 Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
                 view.startAnimation(animation);
@@ -426,10 +442,7 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
             public void onClick(View view) {
                 //playBackJoystickMovements();
                 //joystickMovements.clear();
-                playSavedMovementsButton.setVisibility(View.GONE);
-                savedMovementsButton.setVisibility(View.VISIBLE);
-                savedMovementsButton.setText("Record");
-                communication[0] = (byte)(communication[0] | 0b00100000);
+                communication[0] = (byte)(communication[0] | 0b0010000);
                 sendData(communication);
                 Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
                 view.startAnimation(animation);
@@ -438,64 +451,17 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
             }
         });
 
-
-
-
-
-
-
-        /**vibrator = (Vibrator) getActivity().getSystemService(getContext().VIBRATOR_SERVICE);
-
-        JoystickView left_joystick = (JoystickView) view.findViewById(R.id.joystickView_left);
-        left_joystick.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-              receiveText.setText("left joystick");
-              vibrator.vibrate(170);
-          }
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                communication[0] = (byte)(communication[0] | 0b1000000);
+                sendData(communication);
+                Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.anim_scale);
+                view.startAnimation(animation);
+                vibrator.vibrate(170);
+                resetCom();
+            }
         });
-        left_joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
-            @Override
-            public void onMove(int angle, int strength) {
-                if(isLeftJoy || (strength>30)){
-                    int x = (int) (Math.cos(Math.toRadians((double)angle)) * strength *1000 );
-                    int y = (int) (Math.sin(Math.toRadians((double)angle)) * strength *1000);
-                    sendData(motionToByte(x,y,Lmotions[0]));
-                    resetMotion();
-                    isLeftJoy=true;
-                    sendData(Lmotions);
-                    if(strength==0) {
-                        isLeftJoy = false;
-                        isLeftJoy_vib = false;
-                    }
-                }
-                if(!isLeftJoy_vib && strength > 10){
-                    isLeftJoy_vib = true;
-                    vibrator.vibrate(170);
-                }
-            }
-        },50);
-        JoystickView right_joystick = (JoystickView) view.findViewById(R.id.joystickView_right);
-        right_joystick.setOnMoveListener(new JoystickView.OnMoveListener() {
-            @Override
-            public void onMove(int angle, int strength) {
-                if(isRightJoy || (strength>30)){
-                    int x = (int) (Math.cos(Math.toRadians((double)angle)) * strength *1000);
-                    int y = (int) (Math.sin(Math.toRadians((double)angle)) * strength *1000);
-                    sendData(motionToByte(x,y,Rmotions[0]));
-                    resetMotion();
-                    isRightJoy=true;
-                    if(strength==0){
-                        isRightJoy=false;
-                        isRightJoy_vib=false;
-                    }
-                }
-                if(!isRightJoy_vib&&strength>10){
-                    isRightJoy_vib = true;
-                    vibrator.vibrate(170);
-                }
-            }
-        }, 50); **/
 
 
         View socketConnection = view.findViewById(R.id.socketConnection);
@@ -518,27 +484,7 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
     /*
      * Serial + UI
      */
-
-    /**private void playBackJoystickMovements() {
-        if (joystickMovements.isEmpty()) {
-            return;
-        }
-
-        for (JoystickMovement movement : joystickMovements) {
-            sendData(motionToByte(movement.x, movement.y, (byte) movement.type));
-            // Wait for the specified time interval between joystick movements
-            long sleepTime = movement.time - System.currentTimeMillis();
-            if (sleepTime > 0) {
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    // Handle the InterruptedException
-                }
-            }
-        }
-
-        joystickMovements.clear();
-    }**/
+    // record joystick
 
     private void handleLeftJoystickMove(int angle, int strength) {
         if (strength <= STRENGTH_THRESHOLD && !isLeftJoy) {
@@ -571,7 +517,7 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
     private void handleRightJoystickMove(int angle, int strength) {
         if (strength <= STRENGTH_THRESHOLD && !isRightJoy) {
             resetMotion();
-            sendData(Lmotions);
+            sendData(Rmotions);
             return;
         }
 
@@ -595,9 +541,7 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
         }
         //joystickMovements.add(new JoystickMovement(x, y, Rmotions[0]));
     }
-    /**public List<JoystickMovement> getJoystickMovements() {
-        return joystickMovements;
-    }**/
+
 
     private int calculateCoordinatex(int angle, int strength, int multiplier) {
         return (int) (Math.cos(Math.toRadians((double) angle)) * strength * multiplier);
@@ -626,7 +570,7 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
     private void disconnect() {
         connected = FieldFragment.Connected.False;
         service.disconnect();
-        ((android.widget.Button)getView().findViewById(R.id.socketConnection)).setText("C");
+        ((android.widget.Button)getView().findViewById(R.id.socketConnection)).setText("Connect");
         (getView().findViewById(R.id.socketConnection)).setActivated(false);
     }
 
@@ -722,30 +666,6 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
         (getView().findViewById(R.id.socketConnection)).setActivated(false);
     }
 
-    /**public class JoystickMovement {
-        public int x;
-        public int y;
-        public int type;
-        public long time;
-
-
-        public JoystickMovement(int x, int y, int type, long time) {
-            this.x = x;
-            this.y = y;
-            this.type = type;
-            this.time = time;
-        }
-
-        public long getTime() {
-            return time ;
-        }
-
-        private byte[] getByteArray(byte b) {
-            byte[] result = new byte[1];
-            result[0] = b;
-            return result;
-        }
-    }**/
 
     public void resetMotion(){
         Rmotions[0]=0b0010;
@@ -761,94 +681,13 @@ public class FieldFragment extends Fragment implements ServiceConnection, Serial
     }
     private byte[] motionToByte(int x, int y, byte axis){
         return new byte[]{
-                (byte) (axis | ((x << 4) & 0xff)), // byte 0
+                (byte) (axis | ((x << 4) & 0xff)), // byte 0 axis 2 & 6 dikirim dalam 4 bit data
                 (byte) ((x >> 4) & 0xff), // byte 1
                 (byte) (((x >> 12) & 0xff)| ((y<<6)& 0xff)), // byte 2
                 (byte) ((y >> 2) & 0xff),   // byte 3
                 (byte) ((y >> 10) & 0xff), // byte 4
         };
     }
-    /**public void buttonStartVideoRecording(View view) {
-        // Check if surfaceView is currently invisible
-        if (surfaceView.getVisibility() == View.GONE) {
-            surfaceView.setVisibility(View.VISIBLE);
-            try {
-                // Initialize mediaRecorder inside buttonStartVideoRecording()
-                mediaRecorder = new MediaRecorder();
-                mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-                mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                mediaRecorder.setOutputFile("/sdcard/test.mp4");
-                mediaRecorder.setMaxDuration(5000); // 5 seconds of max recording
-                mediaRecorder.setMaxFileSize(5000000); // Max 5 MB
-                mediaRecorder.prepare();
-            } catch (IOException e) {
-                Toast.makeText(getActivity(), e.toString(), Toast.LENGTH_LONG).show();
-            }
-            mediaRecorder.start();
-        }
-    }
-
-    public void buttonStopVideoRecording(View view) {
-        mediaRecorder.stop();
-        mediaRecorder.release();
-        surfaceView.setVisibility(View.GONE);
-    }**/
-
-    /**private void startRecording() throws IOException {
-        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1);
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mediaProjection = mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, null);
-        }
-        virtualDisplay = createVirtualDisplay();
-        mediaRecorder = new MediaRecorder();
-        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mediaRecorder.setVideoSize(1280, 720);
-        mediaRecorder.setVideoFrameRate(30);
-        mediaRecorder.setOutputFile(getVideoFilePath());
-        mediaRecorder.prepare();
-        mediaRecorder.start();
-        isRecording = true;
-    }
-
-    private void pauseRecording() {
-        if (isRecording) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mediaRecorder.pause();
-            }
-            isPaused = true;
-        }
-    }
-
-    private void stopRecording() {
-        if (isRecording) {
-            mediaRecorder.stop();
-            mediaRecorder.release();
-            isRecording = false;
-            isPaused = false;
-        }
-    }
-
-    private VirtualDisplay createVirtualDisplay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return mediaProjection.createVirtualDisplay("ScreenRecorder", 1280, 720, 1, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, null, null, null);
-        } else {
-            throw new RuntimeException("API level too low to create virtual display.");
-        }
-    }
-
-    private String getVideoFilePath() {
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/recorded_video.mp4";
-    }**/
-
 
 }
 

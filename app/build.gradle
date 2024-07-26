@@ -4,7 +4,7 @@ android {
     compileSdkVersion 31
     defaultConfig {
         targetSdkVersion 31
-        minSdkVersion 18
+        minSdkVersion 19
         vectorDrawables.useSupportLibrary true
 
         applicationId "de.kai_morich.simple_bluetooth_le_terminal"
@@ -38,4 +38,7 @@ dependencies {
     implementation 'io.github.controlwear:virtualjoystick:1.10.1'
     implementation 'androidx.navigation:navigation-fragment:2.5.3'
     implementation 'androidx.navigation:navigation-ui:2.5.3'
+    implementation 'com.google.mlkit:text-recognition:16.0.0'
+    implementation 'com.google.mlkit:vision-common:17.3.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
 }

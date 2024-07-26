@@ -1,17 +1,10 @@
 package de.kai_morich.simple_bluetooth_le_terminal;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
-
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 
 
 

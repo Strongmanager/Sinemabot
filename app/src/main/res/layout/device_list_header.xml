@@ -12,7 +12,7 @@
             app:menu="@menu/menu_devices"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/mainColor"
+            android:background="@color/kuning"
         />
 
 

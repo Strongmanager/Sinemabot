@@ -5,6 +5,11 @@
     <string name="down">down</string>
     <string name="left">left</string>
     <string name="right">right</string>
+    <string name="record_motion">record motion</string>
+    <string name="stop_motion">stop motion</string>
+    <string name="play_motion">play motion</string>
+    <string name="bluetooth_connection">bluetooth connection</string>
+
 
     <string name="bluetooth_permission_title">Bluetooth permission</string>
     <string name="bluetooth_permission_grant">Bluetooth permission is required by this App. Please grant in next dialog.</string>
